@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+### 01. React(Library) vs Next.js(Framework): 아키텍처와 철학
 
-## Getting Started
+```
+Next.js는 **'설정(Configuration)'**의 늪에서 벗어나 **'관습(Convention)'**을 따름으로써, 개발자가 인프라 고민 없이 비즈니스 로직(화면/기능)에만 집중할 수 있게 해줍니다.
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Library의 한계: React만의 '빈 땅'과 설정 지옥
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- 비유: 셀프 건축 (UI라는 벽돌만 제공되므로 라우터, 상태관리, 번들러 등을 개발자가 직접 구해서 집을 지어야 함)
+- 주요 Pain Points:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+- 높은 피로도: 필요한 외부 라이브러리를 일일이 찾고, 설치하고, 각각의 규칙을 학습해야 함.
+- 유지보수 부담: 페이지가 추가될 때마다 라우팅 설정 파일(BrowserRouter, Routes 등)을 수동으로 업데이트해야 함.
+- 제어의 주도권: 전체 애플리케이션의 구조와 흐름을 개발자가 직접 통제하고 책임져야 함.
 
-## Learn More
+```
 
-To learn more about Next.js, take a look at the following resources:
+2. Framework의 등장: 제어의 역전(IoC) 패러다임
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- 비유: 풀옵션 모델하우스 / 호텔 시스템 (골조와 배관이 이미 완성되어 있으며, 특정 규칙에 맞춰 방을 채우기만 하면 됨)
+- 핵심 개념: 제어의 역전 (Inversion of Control, IoC)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+과거 (React): 개발자의 코드가 주도권을 잡고 외부 도구를 호출하는 방식.
+현재 (Next.js): 프레임워크가 뼈대와 흐름을 통제하며, 개발자의 코드는 부품처럼 호출당하는 방식.
 
-## Deploy on Vercel
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. App Router 방식 (Next.js 15 표준)라우팅 설정을 코드 작성으로 하지 않고, 폴더 구조와 파일명(관습)으로 자동 해결합니다.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+* `app/page.tsx` → `/` (메인 화면)
+* `app/about/page.tsx` → `/about` (About 화면)
+
+> 개발자는 완성된 컴포넌트를 `export default`로 넘겨주기만 하면, 프레임워크가 알아서 최적화 및 렌더링을 제어합니다.
+
+```
+
+4. 비교 요약: Configuration vs Convention
+
+| 구분          | React (Library)          | Next.js (Framework)                         |
+| :------------ | :----------------------- | :------------------------------------------ |
+| **핵심 철학** | 설정 (Configuration)     | 관습 (Convention)                           |
+| **주도권**    | 개발자에게 있음          | 프레임워크에게 있음 (IoC)                   |
+| **장점**      | 높은 자유도              | 높은 생산성, 비즈니스 로직에 100% 집중 가능 |
+| **단점**      | 설정 및 관리 피로도 증가 | 프레임워크 규칙에 종속됨                    |
