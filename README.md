@@ -116,3 +116,78 @@ export default function SafeTimeDisplay() {
   );
 }
 ```
+
+### 02. Navigation 패러다임: Hard Navigation vs Soft Navigation
+
+```
+Next.js는 전통적인 `<a>` 태그 기반의 **Hard Navigation(전체 새로고침)** 방식에서 벗어나, `<Link>` 컴포넌트를 통한 **Soft Navigation(부분 교체)**과 **Prefetching(미리 가져오기)**을 활용해 앱과 같은 끊김 없는 사용자 경험을 구현합니다.
+```
+
+1. 1세대 방식: Hard Navigation의 한계 (철거 후 재건축)
+
+- 비유: 이사 (포크레인 철거)
+  옆집으로 이동하기 위해 현재 살던 집을 포크레인으로 완전히 부수고, 새 땅에서 기초 공사부터 다시 시작하는 방식입니다. 브라우저는 현재 DOM 트리를 완전히 파괴(Unmount)하고 서버로부터 새 HTML을 받아 처음부터 다시 그립니다.
+
+```
+🔍 하드 네비게이션의 3대 Pain Points
+- 화면 깜빡임 (White Flash): 기존 페이지가 파괴되고 새 페이지 HTML을 수신할 때까지 하얀 공백 화면 노출.
+- 상태 소멸 (State Loss): 메모리에 저장되어 있던 작성 중인 댓글, 스크롤 위치, 입력 폼 데이터, 열린 모달/사이드바 상태 등이 전면 초기화됨.
+- 비효율적인 재연산: 페이지 이동 시 변하지 않는 공통 UI(Header, Footer, Navigation Bar 등)까지 부수고 처음부터 다시 만듦.
+
+```
+
+```javascript
+/* ❌ [Pain Point] Hard Navigation (기본 <a> 태그) - 파괴적인 이동 */
+export default function NavBar() {
+  return (
+    <nav>
+      {/* 클릭 시 브라우저 전체가 새로고침되며 모든 React State가 증발합니다. */}
+      <a href="/dashboard">Dashboard (Hard)</a>
+      <a href="/settings">Settings (Hard)</a>
+    </nav>
+  );
+}
+```
+
+2. Next.js의 솔루션: Soft Navigation과 '완제품 가구' 배송
+
+- 핵심 개념: RSC Payload (부분 리모델링)
+- 페이지 전체를 부수지 않고, 변경이 필요한 영역의 RSC Payload(완성된 가구 지시서)만 서버로부터 받아와 필요한 부분만 콕 집어서 교체합니다.
+
+```
+💡 React Router vs Next.js Router (가구 배송 비유)
+- React Router (SPA): 텅 빈 방에 목재/나사(JSON 데이터)와 조립 설명서(JS 번들)가 배송됨. 브라우저가 땀 흘려 가구를 직접 조립해야 함 (클라이언트 연산 부담 ⬆️).
+- Next.js Router: 공장에서 이미 조립이 끝난 완성형 가구(RSC Payload)가 배송됨. 브라우저는 가져온 가구를 알맞은 위치에 놓기만 하면 됨 (브라우저 부담 ⬇️, 속도)
+
+```
+
+```javascript
+/* ✅ [Solution] Next.js <Link> (Soft Navigation) - 부드러운 전환 */
+import Link from "next/link";
+
+export default function NavBar() {
+  return (
+    <nav>
+      {/* 클릭 시 바뀔 부분의 '완제품(RSC Payload)'만 가져와 화면을 교체합니다. */}
+      {/* 새로고침이 발생하지 않아 스크롤, 영상 재생, 폼 입력 상태가 유지됩니다. */}
+      <Link href="/dashboard">Dashboard (Soft)</Link>
+      <Link href="/settings">Settings (Soft)</Link>
+    </nav>
+  );
+}
+```
+
+3. [Deep Dive] '프리패칭(Prefetching)'의 동작 원리
+
+- 개념: 사용자가 링크를 클릭하기도 전에, 다음 이동할 페이지의 데이터를 백그라운드에서 미리 받아오는 기술입니다.
+- 비유: 베테랑 셰프의 예측 요리
+  손님이 메뉴판에서 '파스타'를 유심히 쳐다보는 순간, 눈치 빠른 셰프(Next.js)가 주문이 들어오기도 전에 미리 면을 삶아두어 주문 즉시 요리를 내어주는 원리와 같습니다
+
+```
+[1. 시야 감지 (Intersection Observer)]
+  └─► 화면 내에 <Link> 컴포넌트가 노출(Viewport 진입)되었는지 감지
+       └─► [2. 백그라운드 다운로드 (Background Prefetch)]
+            └─► 사용자가 클릭하기 전, 백그라운드에서 해당 페이지의 RSC Payload를 미리 다운로드
+                 └─► [3. 즉시 전환 (Instant Transition)]
+                      └─► 클릭하는 순간 네트워크 대기 시간 없이 0초 만에 화면 전환 완료
+```
