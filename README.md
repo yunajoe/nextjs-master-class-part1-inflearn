@@ -104,3 +104,63 @@ export default function Page() {
 - 상태 유지: 레이아웃은 페이지 이동 시에도 언마운트되지 않아 검색어 입력값이나 스크롤 위치 등을 보존하기 유리
 
 - Public의 역할:/ 경로로 시작하는 모든 정적 파일(이미지 등)은 public 폴더를 참조
+
+### 02.File-system Routing과 중첩 레이아웃(Nested Layout)
+
+```
+**파일 시스템 라우팅(File-system Routing)**은 별도의 복잡한 라우터 설정 파일 없이, **올바른 위치에 폴더와 파일을 생성하는 것만으로 URL 주소가 완성되는** Next.js의 강력한 라우팅 시스템입니다.
+```
+
+1. 첫 번째 페이지 만들기 (/about)
+
+- 핵심 규칙:
+
+```
+- 경로 매핑: src/app/about 폴더 생성 시 브라우저 주소는 자동으로 /about이 됩니다.
+- 파일명 규칙: 반드시 소문자 page.tsx여야 합니다 (About.tsx나 Page.tsx는 404 에러 발생).
+
+- Export 규칙: 자유로운 함수 이름 사용이 가능하지만 반드시 export default를 사용해야 합니다.
+
+- Fast Refresh: 코드를 저장하면 서버 재시작 없이 브라우저에 즉시 반영됩니다.
+
+```
+
+2. 중첩 레이아웃(layout.tsx)의 적용
+
+```
+- 공통 UI 관리: 특정 섹션(예: About)에서만 공통으로 유지되어야 하는 네비게이션, 사이드바 등을 관리합니다.
+
+- children Prop: 레이아웃 컴포넌트는 반드시 하위 page.tsx 내용이 주입되는 children 슬롯을 포함해야 합니다.
+```
+
+```javascript
+/* ✅ [실습 코드] src/app/about/layout.tsx */
+export default function AboutLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="border-4 border-blue-500 m-4 p-4 rounded-lg">
+      <nav className="bg-blue-100 p-4 mb-4 rounded">
+        <h2 className="text-xl font-bold text-blue-800">🏢 About 섹션 전용 네비게이션</h2>
+      </nav>
+      {/* page.tsx의 내용이 들어가는 자리 */}
+      <main className="bg-white">{children}</main>
+    </section>
+  );
+}
+```
+
+3. 레이아웃 중첩의 미학: 샌드위치 조립 방식
+
+- localhost:3000/about/company 접속 시 조립 순서:
+
+```
+- 1단계: 가장 바깥쪽의 Root Layout (src/app/layout.tsx) 적용
+
+- 2단계: 그 위에 About Layout (src/app/about/layout.tsx) 얹기
+
+- 3단계: 가장 안쪽에 Company Page 내용 채우기
+
+```
