@@ -28,6 +28,18 @@ function SideBar() {
       >
         설정 (settings)
       </Link>
+      <Link
+        href="/mypage/orders"
+        className="block py-1.5 pr-2 pl-4 no-underline text-sm  text-[#818181]"
+      >
+        나의 주문
+      </Link>
+      <Link
+        href="/mypage/wishlist"
+        className="block py-1.5 pr-2 pl-4 no-underline text-sm  text-[#818181]"
+      >
+        위시리스트
+      </Link>
     </nav>
   );
 }
