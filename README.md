@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+### 04. 동적 라우팅(Dynamic Routes)과 와일드카드
 
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+    단 하나의 파일로 무한대의 페이지를 생성하는 Next.js의 진정한 무기, **Dynamic Routes**는 가변적인 데이터를 처리하는 핵심 라우팅 시스템입니다.
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. 정적(Static) vs 동적(Dynamic) 라우팅
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **정적 라우팅 (Static):** 폴더 이름을 `about`으로 지으면 주소가 `/about`으로 고정되는 방식입니다.
+- **동적 라우팅 (Dynamic):** 게시판의 글 번호, 사용자 아이디, 상품 고유 코드 등 미리 예측할 수 없는 가변적인 데이터를 처리하기 위해 대괄호(`[]`) 문법을 사용합니다.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. 대괄호 `[]`의 마법: 와일드카드(Wildcard)
 
-## Learn More
+- **와일드카드 개념:** 카드 게임의 '조커'처럼, 무엇이든 받아들일 수 있는 만능 카드입니다. 1번이 오든, `banana`가 오든 들어오는 모든 값을 유연하게 수용합니다.
+- **명명 규칙 (`[id]` vs `[slug]`):**
+- `[id]`: 데이터베이스의 고유 번호(예: `/products/123`)를 URL에 사용할 때 주로 사용합니다.
+- `[slug]`: 사람이 읽기 편한 텍스트 형태(예: `/products/iphone-15-pro`)로 검색엔진(SEO)과 사용자 친숙성에 좋습니다. 개발자가 원하는 이름(`[item]`, `[name]` 등)으로 자유롭게 지정할 수 있습니다.
 
-To learn more about Next.js, take a look at the following resources:
+3. 라우팅 우선순위 (Priority)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **구체적인 것이 우선한다:** 동적 라우팅은 매우 강력하지만, Next.js 라우팅에는 "명확하고 구체적인 이름이 와일드카드보다 우선한다"는 핵심 규칙이 있습니다.
+- **예시 상황:** `products/[slug]` (와일드카드) 폴더와 `products/new` (고정 이름) 폴더가 동시에 존재할 때
+- **동작 결과:** 사용자가 `/products/new`로 접속하면, Next.js는 와일드카드인 `[slug]` 대신 더 구체적인 이름을 가진 `new` 폴더를 먼저 보여줍니다. 이 규칙 덕분에 이름 충돌을 걱정할 필요 없이, 특별한 UI나 기능이 필요한 특정 페이지만 별도의 폴더로 쏙쏙 골라 구현할 수 있습니다.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. 요약
 
-## Deploy on Vercel
+- **대괄호 `[]`의 마법:** 무엇이든 담을 수 있는 유연한 와일드카드 폴더를 생성합니다.
+- **Next.js 15 비동기 처리:** `params`는 Promise 객체이므로 반드시 `async/await`를 사용하여 안전하게 값을 추출해야 합니다.
+- **라우팅 우선순위:** 구체적인 폴더 이름(예: `/products/new`)이 동적 라우팅 폴더(예: `/products/[slug]`)보다 항상 우선 적용됩니다.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+동적 라우팅을 활용해 나만의 멋진 상세 페이지를 직접 구현해 보세요! 추가로 궁금한 점이나 다음 단계로 넘어가고 싶은 부분이 있으신가요?
