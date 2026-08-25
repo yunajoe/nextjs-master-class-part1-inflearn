@@ -118,3 +118,94 @@ export default async function ProductDetailPage({
 - **Next.js 15 `params` 비동기화:** `params`가 Promise이므로 반드시 `await`를 거쳐 값을 추출해야 합니다.
 - **데이터 타입 일치 (`parseInt`):** URL에서 넘어온 문자열 형태의 `id`를 숫자형으로 변환하여 비교해야 정확한 탐색이 가능합니다.
 - **예외 처리:** 존재하지 않는 ID로 접근했을 때 앱 크래시를 방지하는 안전장치(`if (!product)`)를 포함합니다.
+
+### 06. Search Params
+
+1. Search Params란?
+
+- 주소창 물음표(?) 뒤에 붙는 옵션 값 (예: /products?sort=price)
+- 목적지(Path)로 가는 '택시 기사님께 전달하는 추가 요구사항(옵션)
+
+2. Next.js 15의 가장 큰 변화: 동기 ➡️ 비동기 (await)
+
+- 변경 전: searchParams를 즉시 꺼내서 사용 (동기)
+- 변경 후: searchParams가 Promise객체로 변경됨
+- 이유: 값이 준비될 때까지 기다리는(await) 동안 다른 작업을 먼저 처리(스트리밍)하여 성능을 최적화하기 위함
+
+### 07. HTML <form>과 서버 컴포넌트로 검색 기능 구현
+
+1. 핵심 철학: 웹 플랫폼 우선 (Web Platform First)
+
+- useState, onChange 같은 복잡한 상태 관리 없이, HTML 기본 태그(<form>, <input>, name="q")만으로 검색 기능을 구현합니다.
+- 점진적 향상(Progressive Enhancement): 자바스크립트가 느린 환경이나 로딩 전에도 브라우저 기본 규칙에 의해 검색 기능이 즉시 작동
+
+2. 주요 컴포넌트 구현
+
+- Search.tsx
+
+```javascript
+export default function Search({ initialQuery }: { initialQuery?: string }) {
+  return (
+    <form action="/products" className="flex flex-1 relative">
+      <input
+        name="q"
+        defaultValue={initialQuery}
+        placeholder="검색어를 입력하세요..."
+        className="w-full border rounded-md px-3 py-2 text-black"
+      />
+      <button type="submit" className="hidden">검색</button>
+    </form>
+  );
+}
+
+```
+
+```
+1. action="/products": 폼 제출 시 브라우저가 직접 해당 주소로 이동시킵니다.
+2. name="q": 입력값을 자동으로 URL의 쿼리 스트링(?q=검색어)으로 변환합니다.
+3. defaultValue={initialQuery}: 비제어 컴포넌트 방식을 사용하여 브라우저가 입력값을 관리하게 두고, 서버에서 받은 초기값만 채워준다.
+
+```
+
+- page.tsx (서버 컴포넌트 & 데이터 필터링)
+
+```javascript
+
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function ProductListPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const query = typeof params.q === 'string' ? params.q : "";
+  const sortOrder = typeof params.sort === 'string' ? params.sort : "";
+
+  // 1. 검색 필터링
+  let filteredProducts = products.filter(p => p.name.includes(query));
+
+  // 2. 가격 정렬
+  if (sortOrder === "asc") filteredProducts.sort((a, b) => a.price - b.price);
+  if (sortOrder === "desc") filteredProducts.sort((a, b) => b.price - a.price);
+
+  return (
+    <div className="p-10">
+      <Search initialQuery={query} />
+
+      {/* 정렬 버튼 (검색어 q 유지) */}
+      <Link href={{ query: { q: query, sort: 'asc' } }}>가격 낮은 순</Link>
+      <Link href={{ query: { q: query, sort: 'desc' } }}>가격 높은 순</Link>
+
+      {/* 결과 렌더링 */}
+      {filteredProducts.map(p => (
+        <div key={p.id}>{p.name} - {p.price.toLocaleString()}원</div>
+      ))}
+    </div>
+  );
+}
+
+```
+
+```
+
+
+```
