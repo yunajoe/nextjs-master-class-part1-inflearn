@@ -1,4 +1,4 @@
-### 05. 목록-상세 패턴 구현과 동적 데이터 흐름
+### 01. 목록-상세 패턴 구현과 동적 데이터 흐름
 
 ```
     **목록과 상세(List-Detail)** 구조는 현대 웹 서비스의 표준 아키텍처이며, URL이 데이터를 찾는 열쇠(Key)로 기능하는 데이터 흐름을 체화하는 과정입니다.
@@ -119,7 +119,7 @@ export default async function ProductDetailPage({
 - **데이터 타입 일치 (`parseInt`):** URL에서 넘어온 문자열 형태의 `id`를 숫자형으로 변환하여 비교해야 정확한 탐색이 가능합니다.
 - **예외 처리:** 존재하지 않는 ID로 접근했을 때 앱 크래시를 방지하는 안전장치(`if (!product)`)를 포함합니다.
 
-### 06. Search Params
+### 02. Search Params
 
 1. Search Params란?
 
@@ -132,7 +132,7 @@ export default async function ProductDetailPage({
 - 변경 후: searchParams가 Promise객체로 변경됨
 - 이유: 값이 준비될 때까지 기다리는(await) 동안 다른 작업을 먼저 처리(스트리밍)하여 성능을 최적화하기 위함
 
-### 07. HTML <form>과 서버 컴포넌트로 검색 기능 구현
+### 03. HTML <form>과 서버 컴포넌트로 검색 기능 구현
 
 1. 핵심 철학: 웹 플랫폼 우선 (Web Platform First)
 
