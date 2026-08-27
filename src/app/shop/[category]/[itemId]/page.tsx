@@ -9,7 +9,7 @@ async function page({
     <div className="p-10 bg-emerald-50 min-h-screen">
       <div className="max-w-3xl bg-white p-12 rounded-[3rem] border-4 border-emerald-500 shadow-2xl">
         <h2 className="text-2xl font-black text-emerald-600 mb-10 italic border-b-2 pb-4">
-          NESTED ROUTE INSPECTOR
+          NESTED ROUTE INSPECTOR2
         </h2>
         <div className="grid grid-cols-2 gap-8">
           <div className="p-6 bg-emerald-50 rounded-2xl">
