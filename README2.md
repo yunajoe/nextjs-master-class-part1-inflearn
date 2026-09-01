@@ -125,12 +125,13 @@ export default async function ProductDetailPage({
 
 - 주소창 물음표(?) 뒤에 붙는 옵션 값 (예: /products?sort=price)
 - 목적지(Path)로 가는 '택시 기사님께 전달하는 추가 요구사항(옵션)
+- URL의 물음표 뒤에 붙어 페이지에 대한 추가적인 옵션이나 필터링 조건을 서버에 전달할 때 사용. 목적지 자체보다는 '가는 방법'에 대한 정보
 
 2. Next.js 15의 가장 큰 변화: 동기 ➡️ 비동기 (await)
 
 - 변경 전: searchParams를 즉시 꺼내서 사용 (동기)
 - 변경 후: searchParams가 Promise객체로 변경됨
-- 이유: 값이 준비될 때까지 기다리는(await) 동안 다른 작업을 먼저 처리(스트리밍)하여 성능을 최적화하기 위함
+- 이유: 값이 준비될 때까지 기다리는(await) 동안 다른 작업을 먼저 처리(스트리밍)하여 성능을 최적화하기 위함.
 
 ### 03. HTML <form>과 서버 컴포넌트로 검색 기능 구현
 
@@ -202,10 +203,5 @@ export default async function ProductListPage({ searchParams }: PageProps) {
     </div>
   );
 }
-
-```
-
-```
-
 
 ```
