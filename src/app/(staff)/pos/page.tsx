@@ -1,12 +1,6 @@
-// (staff) 폴더 역시 URL에서 무시됩니다.
-// 따라서 실제 접속 주소는 localhost:3000/pos 가 됩니다.
-
 import { formatCurrency } from "@/src/app/_utils/currency";
 
-// [Private Folders 활용]
-// 라우팅 시스템에서 완벽하게 숨겨진 _utils 폴더에서 공통 함수를 가져옵니다.
-
-export default function PosDashboard() {
+function page() {
   const totalSales = 1245000;
 
   return (
@@ -33,3 +27,5 @@ export default function PosDashboard() {
     </div>
   );
 }
+
+export default page;
