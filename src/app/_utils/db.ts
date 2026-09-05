@@ -19,3 +19,24 @@ export const MOCK_DEVICES: Device[] = [
   },
   { id: "L-202", name: "주방 무드등", category: "light", status: "off" },
 ];
+
+export const WATCH_COLLECTION = [
+  {
+    id: 1,
+    name: "Patek Philippe Nautilus",
+    price: "₩120,000,000",
+    spec: "Self-winding mechanical",
+  },
+  {
+    id: 2,
+    name: "Audemars Piguet Royal Oak",
+    price: "₩75,000,000",
+    spec: "Calibre 2385",
+  },
+  {
+    id: 3,
+    name: "Rolex Submariner Date",
+    price: "₩15,000,000",
+    spec: "Oystersteel, 41 mm",
+  },
+];
