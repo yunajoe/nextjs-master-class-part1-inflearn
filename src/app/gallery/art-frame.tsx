@@ -5,7 +5,7 @@
 
 function ArtFrame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="border-8 max-w-3xl w-full p-8 flex flex-col gap-4 transition duration-300 ease-in-out hover:-rotate-10 hover:scale-105">
+    <div className="border-8 max-w-3xl w-full p-8 flex flex-col gap-4 transition duration-300 ease-in-out hover:-rotate-5 hover:scale-105">
       {children}
     </div>
   );

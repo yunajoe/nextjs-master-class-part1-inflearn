@@ -1,6 +1,7 @@
 // [Phase 3] 조립 관제탑: 갤러리 페이지 (page.tsx)
 
 import ArtFrame from "@/src/app/gallery/art-frame";
+import LikeButton from "./like-button";
 
 // 역할: 서버 컴포넌트(Orchestrator)입니다. 미술품 데이터를 DB에서 가져오듯 시뮬레이션하고, 클라이언트 액자와 서버 데이터를 하나로 조립합니다.
 function page() {
@@ -18,9 +19,13 @@ function page() {
       <h1 className="text-6xl mt-20 border-b-4">LUX-GALLERY.</h1>
       {/* client 카드 */}
       <ArtFrame>
-        <h1 className="text-6xl">{data.title}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-6xl">{data.title}</h1>
+          <LikeButton />
+        </div>
         <p className="text-xl">Curated by {data.artist}</p>
         <p className="text-[20px]">{data.description}</p>
+        <span className="text-sm">{data.details}</span>
       </ArtFrame>
     </div>
   );
