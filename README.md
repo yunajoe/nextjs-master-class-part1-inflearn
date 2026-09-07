@@ -182,3 +182,66 @@ export default function GlobalError({
   );
 }
 ```
+
+## 5. reset과 refresh의 사용
+
+- **`use client` 필수 이유**: 에러 UI 렌더링 및 복구 버튼 클릭 이벤트 처리는 브라우저 상호작용이 필수이므로 클라이언트 컴포넌트로 선언해야 함
+- **Digest 활용**: 보안을 위해 실제 에러 메시지는 숨겨지며, 대신 전달되는 해시값(`digest`)을 통해 서버 로그에서 원인 역추적 가능
+
+````
+
+## 왜 `reset()`만 쓰면 안 될까? (실무의 함정)
+
+- **클라이언트 라우터 캐시**: Next.js App Router는 성능 최적화를 위해 브라우저 단에 강력한 캐시를 유지함
+- **한계**: 서버 컴포넌트(`page.tsx`) 에러 상황에서 `reset()`만 호출하면 React는 컴포넌트만 재렌더링하려 하지만, 브라우저는 캐시에 남아있는 실패 상태를 그대로 가져오기 때문에 **버튼을 눌러도 에러 화면이 반복되는 먹통 현상**이 발생함
+
+---
+
+##  Next.js 15 완벽 대응 복구 패턴 (`router.refresh() + reset()`)
+
+실무에서는 서버로 강제 요청을 보내 최신 데이터를 가져오고 에러 UI를 동시에 해제해야 함
+
+### 동작 원리
+
+1. **`router.refresh()`**: 브라우저 라우터 캐시를 비우고 서버에 새로운 데이터 재요청
+2. **`reset()`**: 화면에 떠 있는 에러 경계(Error Boundary) UI 초기화
+3. **`startTransition`**: React 18 동시성 렌더링 기능을 이용해 위 두 작업을 백그라운드에서 하나로 묶어 처리함으로써 화면이 하얗게 깜빡이지 않고 부드럽게 전환되도록 보장
+
+### 적용 코드 예시
+
+```tsx
+"use client";
+
+import { startTransition } from "react";
+import { useRouter } from "next/navigation";
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  const router = useRouter();
+
+  const handleRetry = () => {
+    startTransition(() => {
+      router.refresh(); // 1. 라우터 캐시 갱신 및 서버 데이터 재요청
+      reset(); // 2. 에러 경계 초기화
+    });
+  };
+
+  return (
+    <div className="p-6 text-center">
+      <p>문제가 발생했습니다. (Error ID: {error.digest})</p>
+      <button
+        onClick={handleRetry}
+        className="px-4 py-2 bg-blue-600 text-white rounded-lg mt-4"
+      >
+        다시 시도하기
+      </button>
+    </div>
+  );
+}
+```
+````
