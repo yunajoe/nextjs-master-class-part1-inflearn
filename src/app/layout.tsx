@@ -26,6 +26,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/products" className="hover:text-indigo-600 transition">
               Products
             </Link>
+            <Link
+              href="/dashboard"
+              className="hover:text-emerald-400 transition-colors"
+            >
+              Dashboard
+            </Link>
           </div>
           <div className="flex gap-6 text-sm font-bold text-gray-500">
             <span className="text-2xl font-black text-red-600 tracking-tighter uppercase italic">

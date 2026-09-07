@@ -4,7 +4,7 @@ export default function HomePage() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-10 text-center">
       <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6">
-        미래를 여는 <br />{" "}
+        미래를 여는 <br />
         <span className="text-indigo-600">스마트 테크놀로지</span>
       </h1>
       <p className="text-gray-500 mb-12 max-w-lg mx-auto">
