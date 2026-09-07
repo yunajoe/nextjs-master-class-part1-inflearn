@@ -27,6 +27,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               Products
             </Link>
           </div>
+          <div className="flex gap-6 text-sm font-bold text-gray-500">
+            <span className="text-2xl font-black text-red-600 tracking-tighter uppercase italic">
+              StreamFlix.
+            </span>
+            <Link href="/movies" className="hover:text-indigo-600 transition">
+              Products
+            </Link>
+          </div>
         </nav>
         {/* 실제 페이지 콘텐츠 및 404 페이지가 들어갈 자리 */}
         <main className="flex-1 flex flex-col">{children}</main>
