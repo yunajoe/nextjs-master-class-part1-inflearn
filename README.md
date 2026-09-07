@@ -66,3 +66,119 @@
 
 - **사용자 이탈률 감소**: 즉각적인 시각적 피드백 제공으로 시스템 정상 동작 신호 전달
 - **SEO 및 성능 최적화**: Blocking SSR 방식의 대기 시간을 극복하고 Streaming SSR을 통한 빠른 초기 UI 제공
+
+# 3대 안전 장지: error.tsx
+
+## 1. 개요: 에러를 다루는 자세
+
+- **핵심 목표**: 서버 장애나 예외 상황에서도 브라우저의 '하얀 화면' 대신 세련된 에러 안내 카드와 재시도 버튼을 제공하여 서비스 신뢰도 유지
+- **Next.js 에러 핸들링의 장점**: 에러가 발생한 컴포넌트 영역만 격리하여 처리하므로, 상단 네비게이션이나 푸터 같은 레이아웃(Layout)은 그대로 유지됨
+
+---
+
+## 2. `error.tsx` 구현 및 절대 규칙
+
+### 필수 준수 사항
+
+1. **파일명**: 반드시 소문자로 `error.tsx` 사용
+2. **클라이언트 컴포넌트**: 최상단에 `'use client'` 지시어 필수 (`onClick` 이벤트 및 상태 인터랙션 필요)
+
+### 주요 Props
+
+- **`error`**: 에러 상세 정보 객체
+- _보안 적용_: 프로덕션 환경에서는 DB 비밀번호나 쿼리문 노출을 방지하기 위해 실제 메시지 대신 무작위 해시 문자열인 `digest` 값만 클라이언트로 전달 (서버 터미널 로그에서 디버깅용으로 활용)
+
+- **`reset`**: 브라우저 전체 새로고침 없이 에러가 발생한 컴포넌트 영역만 재실행(Re-render)하는 복구 함수
+
+### 코드 예시 (`src/app/products/error.tsx`)
+
+```tsx
+"use client";
+
+import { useEffect } from "react";
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    console.error("🚨 [System Error 낚아챔]:", error);
+  }, [error]);
+
+  return (
+    <div className="min-h-[400px] flex flex-col items-center justify-center gap-6 p-8 bg-white border border-red-100 rounded-xl mt-8 shadow-sm text-black">
+      <div className="text-center space-y-4">
+        <div className="text-6xl animate-bounce">💣</div>
+        <h2 className="text-2xl font-bold text-gray-900">
+          문제가 발생했습니다.
+        </h2>
+        <p className="text-gray-600 max-w-md mx-auto">
+          일시적인 네트워크 오류로 상품 정보를 불러오지 못했습니다. 잠시 후 다시
+          시도해 주세요.
+        </p>
+
+        {error.digest && (
+          <p className="text-xs text-gray-500 bg-gray-100 p-2 rounded font-mono inline-block">
+            Error ID: {error.digest}
+          </p>
+        )}
+      </div>
+
+      <button
+        onClick={() => reset()}
+        className="px-6 py-2.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors shadow-md"
+      >
+        다시 시도하기
+      </button>
+    </div>
+  );
+}
+```
+
+---
+
+## 3. 리액트 에러 경계(Error Boundary) 구조
+
+- **샌드위치 구조**: `Layout (빵)` > `Error Boundary (양상추)` > `Page (고기 패티)`
+- **동작 방식**: 안쪽의 `page.tsx`에서 에러가 발생해도 바깥쪽 `error.tsx`가 에러를 흡수하므로, 루트 레이아웃의 네비게이션이나 사이드바는 정상적으로 유지됨
+
+---
+
+## 4. 최후의 보루: `global-error.tsx`
+
+- **용도**: 최상위 `src/app/layout.tsx` (루트 레이아웃) 자체에서 에러가 발생했을 때 앱 전체의 붕괴를 막는 최후 방어선
+- **특징**: 기존 레이아웃이 완전히 깨진 상태에서 렌더링되므로, 파일 내부에서 **`<html>`과 `<body>` 태그를 직접 정의**해야 함
+
+### 코드 예시 (`src/app/global-error.tsx`)
+
+```tsx
+"use client";
+
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  return (
+    <html lang="ko">
+      <body className="flex flex-col items-center justify-center min-h-screen bg-red-50 text-black">
+        <h2 className="text-3xl font-bold text-red-600 mb-4">
+          치명적인 시스템 에러가 발생했습니다.
+        </h2>
+        <p className="mb-6">이용에 불편을 드려 대단히 죄송합니다.</p>
+        <button
+          onClick={() => reset()}
+          className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700"
+        >
+          서비스 전체 다시 로드
+        </button>
+      </body>
+    </html>
+  );
+}
+```
