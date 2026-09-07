@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 3대 안전 장치: not-found.tsx
 
-## Getting Started
+## 1. Next.js 404 핵심 개념
 
-First, run the development server:
+- **`not-found.tsx`**: 라우트 세그먼트별 404 에러 화면을 렌더링하는 컨벤션 파일입니다.
+- **`notFound()` 함수 (`next/navigation`)**: URL 경로는 올바르지만 DB에 데이터가 없는 경우(예: 삭제된 상품 조회) 서버에서 프로그래밍 방식으로 404를 강제 트리거하는 제어 함수입니다. 렌더링을 즉시 중단(Throw)하고 가장 가까운 `not-found.tsx`를 호출하며, 검색 엔진(SEO)을 위해 정확한 HTTP 404 상태 코드를 반환합니다.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 2. 파일 배치 규칙 및 계층 구조 (Hierarchy)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **글로벌 404 (`src/app/not-found.tsx`)**: 애플리케이션 전체를 관장하는 최상위 404 페이지입니다.
+- **로컬 404 (`src/app/[section]/not-found.tsx`)**: 특정 도메인(예: 블로그, 상품 등) 내에서만 독립적으로 작동하는 전용 404 페이지입니다.
+- **탐색 우선순위**: 에러 발생 지점에서 트리 구조를 거슬러 올라가며 **가장 가까운(Nearest)** `not-found.tsx`를 우선 렌더링합니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 3. 주요 실습 구현 포인트
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **글로벌 UI 디자인 (`src/app/not-found.tsx`)**:
+- Tailwind CSS의 연한 대형 폰트(`text-9xl text-indigo-200`)로 시각적 깊이감 조성
+- 회전 배지(`rotate-12`)를 활용해 "의도적으로 디자인된 안내 페이지"라는 심리적 안정감 제공
+- CSS `group`과 `translate` 속성을 이용한 3D 입체 버튼 및 `<Link>` 컴포넌트를 통한 명확한 홈 복구 경로 제공
 
-## Learn More
+- **프로그래밍 방식 제어 (`src/app/products/page.tsx`)**:
+- 데이터 페칭 결과가 비어있을 경우(`if (products.length === 0)`) `notFound()`를 실행하여 즉시 예외 처리
 
-To learn more about Next.js, take a look at the following resources:
+## 4. 요약 및 베스트 프랙티스
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- 404 페이지는 단순한 오류 화면이 아닌 **브랜드 경험의 연장선**입니다.
+- 사용자가 길을 잃었을 때 이탈하지 않도록 **홈으로 돌아가기 등의 명확한 네비게이션**을 반드시 제공해야 합니다.
+- UI 렌더링과 동시에 **HTTP 404 상태 코드**가 정상 반환되는지 확인하여 SEO 품질을 유지해야 합니다.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# 3대 안전 장치: loading.tsx
