@@ -1,0 +1,64 @@
+async function DashboardPage() {
+  const dynamicResponse = await fetch(
+    "https://timeapi.io/api/Time/current/zone?timeZone=Asia/Seoul",
+    {
+      cache: "no-store",
+    },
+  );
+  const dynamicTime = await dynamicResponse.json();
+  const staticResponse = await fetch(
+    "https://timeapi.io/api/Time/current/zone?timeZone=Asia/Seoul",
+    { cache: "force-cache" },
+  );
+
+  const staticTime = await staticResponse.json();
+  return (
+    <div className="min-h-screen bg-slate-900 text-white p-12">
+      <header className="mb-16 border-b border-slate-800 pb-8">
+        <h1 className="text-4xl font-black italic tracking-tighter text-orange-500">
+          STAT PULSE.
+        </h1>
+        <p className="text-slate-400 mt-2">
+          Next.js 15 Caching Strategy Laboratory
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        {/* Dynamic Section */}
+        <div className="p-10 bg-slate-800 rounded-[3rem] border-2 border-orange-500/30 shadow-2xl">
+          <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase">
+            Dynamic Rendering
+          </span>
+          <h2 className="text-2xl font-bold mt-6 mb-2">실시간 서버 시간</h2>
+          <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+            이 데이터는 새로고침할 때마다 <br />
+            서버에서 매번 새로 구워집니다.
+          </p>
+          <div className="text-3xl font-mono font-black text-orange-400 bg-black/40 p-6 rounded-2xl">
+            {dynamicTime.dateTime.split("T")[1].split(".")[0]}
+          </div>
+        </div>
+
+        {/* Static Section */}
+        <div className="p-10 bg-slate-800 rounded-[3rem] border-2 border-slate-700 shadow-xl opacity-80">
+          <span className="bg-slate-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase">
+            Static Rendering
+          </span>
+          <h2 className="text-2xl font-bold mt-6 mb-2">고정된 시스템 시간</h2>
+          <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+            이 데이터는 빌드(Build) 시점에 <br />한 번만 가져와서 얼려졌습니다.
+          </p>
+          <div className="text-3xl font-mono font-black text-slate-500 bg-black/40 p-6 rounded-2xl">
+            {staticTime.dateTime.split("T")[1].split(".")[0]}
+          </div>
+        </div>
+      </div>
+
+      <footer className="mt-16 text-center text-slate-600 text-xs font-bold uppercase tracking-[0.3em]">
+        Instruction: Run [npm run build && npm start] to see the magic.
+      </footer>
+    </div>
+  );
+}
+
+export default DashboardPage;
