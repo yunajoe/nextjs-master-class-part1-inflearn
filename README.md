@@ -110,3 +110,120 @@ export const revalidate = 60; // 60초마다 페이지 전체 재검증
 | --------------------- | ------------------- | ----------------------------------------------------------- |
 | **`true`** _(기본값)_ | 실시간 생성 및 캐싱 | 명단에 없는 ID 접근 시 서버가 즉시 동적 렌더링 후 캐시 저장 |
 | **`false`**           | 404 차단            | 명단에 없는 ID 접근 시 무조건 404 Not Found 에러 반환       |
+
+# 실습
+
+## 1. 정적 빌드 상세 페이지 코드 (`src/app/products/[id]/page.tsx`)
+
+```typescript
+import React from 'react';
+
+// [옵션 설정]
+// true(기본값): 미리 빌드 안 된 ID로 접속 시 실시간 생성 (Dynamic)
+// false: 미리 빌드 안 된 ID로 접속 시 즉시 404 페이지 반환
+export const dynamicParams = true;
+
+/**
+ * 1. 정적 파라미터 생성 함수
+ * 빌드 타임에 실행되어 "이 ID들로 페이지를 미리 만들어줘"라고 명령합니다.
+ */
+export async function generateStaticParams() {
+  // 실무에서는 DB에서 인기가 많은 상위 10개 상품의 ID 목록만 가져옵니다.
+  const res = await fetch('https://jsonplaceholder.typicode.com/posts');
+  const posts = await res.json();
+
+  // 반드시 [{ id: '1' }, { id: '2' }, ...] 형태의 문자열 배열을 반환해야 합니다.
+  return posts.slice(0, 10).map((post: { id: number }) => ({
+    id: String(post.id),
+  }));
+}
+
+/**
+ * 2. 상세 페이지 컴포넌트
+ * 빌드 타임에는 위 함수에서 받은 ID들로 10번 실행되어 HTML이 생성됩니다.
+ * 배포 후에는 사용자 요청에 따라 동작합니다.
+ */
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function ProductDetail({ params }: Props) {
+  // Next.js 15 비동기 파람스 처리
+  const { id } = await params;
+
+  // 데이터 페칭 (이미 빌드된 페이지라면 이 fetch는 빌드 타임에 완료되어 HTML에 박제됩니다.)
+  const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`);
+
+  if (!res.ok) return <div className="p-10">상품 정보를 불러올 수 없습니다.</div>;
+
+  const product = await res.json();
+
+  return (
+    <div className="min-h-screen bg-white p-12">
+      <div className="max-w-3xl mx-auto border-l-8 border-slate-900 pl-10">
+        <span className="text-xs font-black bg-slate-900 text-white px-3 py-1 uppercase tracking-tighter">
+          Exclusive Content
+        </span>
+        <h1 className="text-5xl font-black mt-6 mb-4 text-slate-900 leading-tight italic">
+          {product.title}
+        </h1>
+        <p className="text-xl text-slate-500 font-medium leading-relaxed">
+          {product.body}
+        </p>
+        <div className="mt-12 text-[10px] font-mono text-slate-300 uppercase tracking-widest">
+          Product ID: {id} | Generated via Static Params
+        </div>
+      </div>
+    </div>
+  );
+}
+
+```
+
+## 2. 코드 핵심 요약
+
+- **`generateStaticParams`**: 인쇄소에 넘길 "손님 명단"입니다. 빌드 타임에 이 함수가 반환하는 10개의 ID만큼 HTML 파일이 미리 생성됩니다.
+- **`dynamicParams`**: 뷔페에 없는 메뉴를 주문했을 때 주방장이 즉석요리를 해줄지(`true`), 아니면 안 판다고 할지(`false`) 결정하는 스위치입니다.
+- **성능적 이점**: `id: 1`부터 `10`까지는 서버가 연산을 하지 않습니다. 이미 완성된 파일을 HDD에서 꺼내주기만 하므로 응답 속도가 0.01초대에 수렴합니다.
+
+## 3. Next.js 15 정적 최적화 엔진 분석
+
+### ① `generateStaticParams`: 빌드 타임의 정적 페이지 오케스트레이터
+
+- **엔지니어링 본질**: SSG(Static Site Generation)를 구현하기 위한 핵심 제어권입니다. Next.js 빌드 엔진은 `next build` 과정에서 이 함수를 가장 먼저 호출하여, 동적 라우트(`[id]`)에 주입할 파라미터 배열을 확보합니다.
+- **기술적 메커니즘**:
+- 이 함수가 반환하는 배열의 길이만큼 서버는 `fetch`를 미리 수행하고, 그 결과물을 물리적인 `.html` 파일과 `.json`(RSC Payload) 파일로 디스크에 생성(Pre-rendering)합니다.
+- 반환되는 객체의 `id` 값은 반드시 문자열(String)이어야 하는데, 이는 URL 경로가 시리얼라이즈(Serialize)된 텍스트 데이터이기 때문입니다.
+
+- **실무 팁**: 모든 데이터를 여기서 다 구우면 빌드 시간이 무한정 늘어날 수 있습니다. 따라서 '조회수 상위 100개' 혹은 '최근 일주일 신상품' 등 비즈니스 중요도가 높은 데이터만 선별적으로 정적 빌드하는 것이 아키텍처 설계의 정수입니다.
+
+### ② `dynamicParams`: 온디맨드(On-demand) 렌더링 폴백 전략
+
+- **엔지니어링 본질**: 미리 정의되지 않은 세그먼트에 대한 서버의 대응 로직을 결정하는 정책 스위치입니다.
+- **기술적 메커니즘**:
+- **`true` (기본값)**: 명단에 없는 ID로 접속 시, Next.js는 즉시 404를 띄우지 않고 서버에서 실시간으로 렌더링(SSR)을 시도합니다. 생성된 페이지는 즉시 캐시되어, 다음 접속자부터는 정적 페이지(Static)처럼 동작하게 됩니다 (ISR의 특성을 가짐).
+- **`false`**: 일종의 'Strict Mode'입니다. `generateStaticParams`에서 선언되지 않은 모든 경로는 런타임 연산을 시도조차 하지 않고 즉시 `notFound()` 처리를 합니다.
+
+- **실무 팁**: 상품 수가 고정된 관리자 페이지나 한정판 이벤트 페이지처럼 보안과 리소스 통제가 엄격해야 하는 곳에서는 `false`를, 일반적인 커머스 상세 페이지에서는 사용자 경험을 위해 `true`를 권장합니다.
+
+### ③ 성능적 이점: 컴퓨팅(Compute)에서 스토리지(I/O)로의 패러다임 전환
+
+- **엔지니어링 본질**: 사용자 요청 시점에 발생하던 $O(n)$의 복잡도를 빌드 시점으로 전이시켜, 런타임의 TTFB(Time to First Byte)를 극한으로 낮추는 기술입니다.
+- **기술적 메커니즘**:
+- **일반적인 동적 페이지**: `Request -> Server Logic -> DB Query -> API Call -> HTML Render -> Response`의 복잡한 과정을 거칩니다.
+- **정적 최적화가 적용된 페이지**: 서버가 이미 완성된 파일을 들고 있어 `Request -> File I/O -> Response`로 과정을 단순화합니다.
+
+- **수치적 결과**: 데이터베이스 쿼리 레이턴시(Latency)와 외부 API 오버헤드가 완전히 제거되므로, 네트워크 환경이 받쳐준다면 응답 속도는 **0.01초대**에 수렴하며 CDN(Content Delivery Network) Edge 캐싱을 100% 활용할 수 있는 구조가 됩니다.
+
+## generateStaticParams 함수는 빌드타임에 무슨일이 일어날까?
+
+- 사용자가 웹사이트에 접속할 때 서버가 API를 호출하는 것이 아니라, **개발자가 배포하기 위해 빌드하는 시점(`npm run build`)에 단 한 번만 실행된다**는 뜻입니다.
+
+- **일반적인 동적 페이지 (SSR):** 사용자가 `/products/1`에 들어올 때마다 서버가 그때서야 `fetch`를 실행해 외부 API를 찌르고 기다립니다.
+- **정적 빌드 페이지 (SSG + `generateStaticParams`):**
+
+1. 개발자가 `npm run build`를 치는 순간, Next.js가 `generateStaticParams`가 준 명단(`1`~`10`)을 가지고 이 컴포넌트를 미리 10번 실행합니다.
+2. 그때 코드 안의 `fetch('.../1')`가 돌아서 가져온 데이터(`title`, `body` 등)를 **HTML 파일 안에 아예 글자 그대로 박아 넣어(박제)** 버립니다.
+3. 나중에 실제 사용자가 웹사이트에 들어오면, 서버는 외부 API를 다시 찌를 필요 없이 **이미 박제되어 있는 HTML 파일을 0.01초 만에 그대로 꺼내서** 보여줍니다.
+
+즉, "런타임(사용자 접속 시점)에는 API 통신이 발생하지 않고, 이미 빌드 때 만들어둔 정적 결과물을 그대로 사용한다"는 의미입니다.
