@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+### 1. Next.js 15 패러다임 변화
 
-## Getting Started
+- **이전 버전 (Next.js 14):** `fetch` 요청 시 기본적으로 데이터를 **자동 캐싱**하여 개발자들을 혼란스럽게 함.
+- **Next.js 15+ 표준:** 기본 정책이 완전히 뒤집혀, **기본적으로 캐싱을 하지 않고** 매 요청마다 최신 데이터를 가져옴 (`no-store` 기본 적용).
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 2. 핵심 렌더링 전략 비교
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| 구분            | 동적 렌더링 (Dynamic)                        | 정적 렌더링 (Static)                       |
+| --------------- | -------------------------------------------- | ------------------------------------------ |
+| **코드 설정**   | 기본값 (또는 명시적 `{ cache: 'no-store' }`) | `{ cache: 'force-cache' }`                 |
+| **작동 시점**   | 사용자가 접속할 때마다 (**Runtime**)         | 프로젝트 빌드 시 단 한 번 (**Build time**) |
+| **데이터 상태** | 항상 최신 데이터 유지                        | 빌드 시점의 데이터로 영구 고정             |
+| **체감 속도**   | 보통 (외부 API/DB 응답 속도 의존)            | **매우 빠름** (CDN을 통해 즉각 전송)       |
+| **추천 용도**   | 주식 시세, 날씨, 장바구니, 실시간 피드 등    | 회사 소개, 이용 약관, 블로그 포스트 등     |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. 실무 테스트 가이드 (`npm run dev` 주의점)
 
-## Learn More
+개발 모드(`npm run dev`)에서는 프레임워크가 편의상 캐시를 자주 무시하므로, 캐싱이 정상 작동하는지 확인하려면 **반드시 프로덕션 모드**로 테스트해야 합니다.
 
-To learn more about Next.js, take a look at the following resources:
+1. **빌드 실행:** `npm run build`
+2. **빌드 로그 확인:** 경로 옆 기호 확인
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `○` (Static): 정적 렌더링 적용됨
+- `ƒ` (Dynamic): 동적 렌더링 적용됨
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **서버 구동:** `npm run start` 로 프로덕션 서버 실행 후 새로고침하며 시간 변화 확인
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. 최종 기술 체크리스트
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [ ] Next.js 15부터 `fetch` 기본값은 캐시 미적용(`no-store`)임을 숙지했는가?
+- [ ] 성능 최적화가 필요한 정적 페이지에는 `{ cache: 'force-cache' }`를 적용했는가?
+- [ ] 데이터의 실시간성 여부에 따라 Dynamic과 Static을 올바르게 분기했는가?
+- [ ] `npm run build` 시 나오는 `○`와 `ƒ` 기호로 의도대로 빌드되었는지 검증했는가?
