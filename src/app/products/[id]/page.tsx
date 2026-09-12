@@ -28,7 +28,24 @@ async function page({ params }: PageProps) {
     return <div className="p-10">상품 정보를 불러올 수 없습니다.</div>;
 
   const product = await res.json();
-  return <div>page</div>;
+  return (
+    <div className="min-h-screen bg-white p-12">
+      <div className="max-w-3xl mx-auto border-l-8 border-slate-900 pl-10">
+        <span className="text-xs font-black bg-slate-900 text-white px-3 py-1 uppercase tracking-tighter">
+          Exclusive Content
+        </span>
+        <h1 className="text-5xl font-black mt-6 mb-4 text-slate-900 leading-tight italic">
+          {product.title}
+        </h1>
+        <p className="text-xl text-slate-500 font-medium leading-relaxed">
+          {product.body}
+        </p>
+        <div className="mt-12 text-[10px] font-mono text-slate-300 uppercase tracking-widest">
+          Product ID: {id} | Generated via Static Params
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default page;
