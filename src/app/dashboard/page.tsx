@@ -12,6 +12,12 @@ async function DashboardPage() {
   );
 
   const staticTime = await staticResponse.json();
+  const isrResponse = await fetch(
+    "https://timeapi.io/api/Time/current/zone?timeZone=Asia/Seoul",
+    { next: { revalidate: 10 } },
+  );
+
+  const isrTime = await isrResponse.json();
   return (
     <div className="min-h-screen bg-slate-900 text-white p-12">
       <header className="mb-16 border-b border-slate-800 pb-8">
@@ -50,6 +56,28 @@ async function DashboardPage() {
           </p>
           <div className="text-3xl font-mono font-black text-slate-500 bg-black/40 p-6 rounded-2xl">
             {staticTime.dateTime.split("T")[1].split(".")[0]}
+          </div>
+        </div>
+        <div className="text-right">
+          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full font-black animate-pulse">
+            ISR ACTIVE (10S)
+          </span>
+          <p className="text-3xl font-mono font-bold mt-2">
+            {isrTime.dateTime.split("T")[1].split(".")[0]}
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Info Box */}
+          <div className="md:col-span-2 p-10 bg-emerald-500 rounded-[2.5rem] text-black shadow-2xl shadow-emerald-500/20">
+            <h2 className="font-black text-2xl mb-4 italic">
+              Next.js 15 ISR 인텔리전스
+            </h2>
+            <p className="font-bold leading-relaxed opacity-80">
+              이 대시보드는 "Stale-While-Revalidate" 전략을 사용합니다. 10초가
+              지나면 첫 접속자에게는 "낡은(Stale)" 데이터를 보여주는 동안
+              백그라운드에서 "새로운(Fresh)" 데이터를 구워내어 다음 접속자에게
+              제공합니다.
+            </p>
           </div>
         </div>
       </div>
