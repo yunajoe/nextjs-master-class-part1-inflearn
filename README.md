@@ -111,9 +111,9 @@ export const revalidate = 60; // 60초마다 페이지 전체 재검증
 | **`true`** _(기본값)_ | 실시간 생성 및 캐싱 | 명단에 없는 ID 접근 시 서버가 즉시 동적 렌더링 후 캐시 저장 |
 | **`false`**           | 404 차단            | 명단에 없는 ID 접근 시 무조건 404 Not Found 에러 반환       |
 
-# 실습
+## 실습
 
-## 1. 정적 빌드 상세 페이지 코드 (`src/app/products/[id]/page.tsx`)
+### 1. 정적 빌드 상세 페이지 코드 (`src/app/products/[id]/page.tsx`)
 
 ```typescript
 import React from 'react';
@@ -180,7 +180,7 @@ export default async function ProductDetail({ params }: Props) {
 
 ```
 
-## 2. 코드 핵심 요약
+### 2. 코드 핵심 요약
 
 - **`generateStaticParams`**: 인쇄소에 넘길 "손님 명단"입니다. 빌드 타임에 이 함수가 반환하는 10개의 ID만큼 HTML 파일이 미리 생성됩니다.
 - **`dynamicParams`**: 뷔페에 없는 메뉴를 주문했을 때 주방장이 즉석요리를 해줄지(`true`), 아니면 안 판다고 할지(`false`) 결정하는 스위치입니다.
@@ -244,3 +244,134 @@ export default async function ProductDetail({ params }: Props) {
 - **캐시 무력화:** 앞서 살펴본 것처럼 개발 모드에서는 캐싱과 정적 최적화 메커니즘이 대부분 해제되어 있기 때문에, `generateStaticParams`로 지정한 페이지든 아니든 접속할 때마다 서버가 실시간으로 코드를 다시 읽어와 처리합니다.
 
 즉, `generateStaticParams` 코드가 실행은 되지만, 프로덕션 환경처럼 "미리 파일을 왕창 만들어두는 정적 빌드(SSG)의 마법"은 오직 `npm run build`를 실행했을 때만 온전히 발휘됩니다.
+
+## generateMetadata
+
+### 1. 메타데이터(Metadata) 개요
+
+- **정의**: '데이터에 관한 데이터'로, 검색 엔진 크롤러나 소셜 미디어 봇이 웹사이트를 이해하고 평가할 수 있도록 `<head>` 태그 안에 숨겨져 제공되는 요약 정보입니다.
+- **비유**: 책 본문이 실제 '데이터'라면, 책 표지의 제목·저자·줄거리는 '메타데이터'입니다.
+
+### 2. Next.js 15 동적 메타데이터 (`generateMetadata`)
+
+- **필요성**: 상품 상세 페이지처럼 URL의 `[id]`에 따라 제목과 설명이 동적으로 바뀔 때 사용하는 Next.js의 약속된 비동기 함수입니다.
+- **핵심 구현 코드 구조**:
+
+```typescript
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params; // Next.js 15 규격: params 비동기 해제
+  const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`);
+  const product = await res.json();
+
+  return {
+    title: `${product.title} | My Amazing Shop`,
+    description: product.body.slice(0, 100),
+    openGraph: {
+      title: `${product.title} 특가 판매 중!`,
+      description:
+        "지금 바로 우리 쇼핑몰에서 한정 수량 특가 상품을 확인하세요!",
+      images: [`/api/og?title=${product.title}`],
+      type: "website",
+    },
+  };
+}
+```
+
+### 3. 성능 최적화: 요청 중복 제거 (Request Memoization)
+
+- **의문**: `generateMetadata`와 `ProductDetail` 컴포넌트에서 각각 `fetch`를 두 번 호출하면 서버 부하가 생기지 않을까?
+- **정답**: **전혀 문제없음.** Next.js 코어의 **요청 중복 제거** 기능 덕분에, 동일한 렌더링 사이클 안에서 같은 `fetch` 요청이 발생하면 첫 번째 결과를 메모리에 캐싱한 후 두 번째부터는 즉시 재사용하므로 성능 저하가 없습니다.
+
+### 4. Open Graph (OG) 마케팅 효과
+
+- **정의**: 페이스북이 만든 국제 표준 규격으로, 카카오톡·슬랙 등에 링크 공유 시 예쁜 썸네일 카드(이미지, 제목, 요약) 형태로 보이게 만듭니다.
+- **가치**: 단순 텍스트 링크보다 시선을 사로잡아 클릭률(CTR)과 유입량을 극대화하는 가성비 최고의 마케팅 요소입니다.
+
+### 5. 검증 및 테스트 방법
+
+- **브라우저 탭**: 상세 페이지(`/products/1`) 접속 시 상단 탭 제목 확인.
+- **소스 코드**: 우클릭 후 `페이지 소스 보기(Ctrl + U)`를 통해 `<head>` 안의 `<title>`, `<meta name="description">`, `<meta property="og:...">` 태그 검증.
+- **소셜 미리보기**: 로컬(`localhost`) 환경은 카카오톡 봇이 접근하지 못하므로, `ngrok` 등을 사용하거나 실제 배포 후 테스트.
+
+## 실습
+
+## 서버 컴퍼너트인데도 왜 네크워크 요청에 보이는거지?
+
+- 브라우저 개발자 도구의 Network(네트워크) 탭을 확인하셨을 때, 외부 API 주소(`jsonplaceholder.typicode.com`)가 직접 찍히는 것은 아니어야 정상입니다.
+
+- Next.js 서버 컴포넌트에서 실행되는 `fetch`는 사용자의 브라우저가 아니라 Next.js 서버(Node.js)가 백그라운드에서 직접 외부 API로 요청을 보내는 방식이기 때문입니다.
+
+- 브라우저의 네트워크 탭에 보이는 요청은 외부 API로 향하는 요청이 아니라, 내 브라우저가 내 Next.js 서버로 페이지를 달라고 요청하는 주소(`GET /shop/1`)입니다.
+
+1. **브라우저 ➔ 내 Next.js 서버**: 사용자가 페이지에 접속하면 브라우저는 내 서버로 요청을 보냅니다. (`GET /shop/1` ➔ 브라우저 네트워크 탭에 표시됨)
+2. **내 Next.js 서버 ➔ 외부 API (`jsonplaceholder`)**: 서버가 화면을 그리기 위해 서버 내부에서 `fetch`를 실행합니다. (`api request 1111`, `api request 2` ➔ 터미널에만 찍히고 브라우저 네트워크 탭에는 나타나지 않음)
+
+## generateMetadata vs JSON-LD
+
+Next.js 등에서 사용하는 `generateMetadata`와 지금 보신 `JSON-LD` 코드는 둘 다 검색엔진 최적화(SEO)를 위해 쓰이지만, **담당하는 역할과 HTML 내 들어가는 형태**가 완전히 다릅니다.
+
+### 1. `generateMetadata` (일반 메타데이터)
+
+- **역할:** 브라우저 탭에 표시되는 제목(`title`), 설명(`description`), 그리고 카카오톡/슬랙/페이스북 등에 링크를 공유할 때 뜨는 미리보기 카드 이미지(`.png`, `Open Graph`) 등을 설정하는 기능입니다.
+- **HTML 생성 형태:** `<head>` 태그 안에 `<meta>` 태그로 변환되어 들어갑니다.
+- **예시:**
+
+```tsx
+export async function generateMetadata({ params }) {
+  const product = await getProduct(params.id);
+  return {
+    title: product.title,
+    description: product.description,
+    openGraph: {
+      images: [product.image],
+    },
+  };
+}
+```
+
+### 2. `JSON-LD` (구조화된 데이터 / Schema.org)
+
+- **역할:** 검색엔진(구글, 네이버 등)에게 이 페이지가 '어떤 구조의 정보(상품, 레시피, 조직, 리뷰 등)'를 담고 있는지 상세한 데이터 규격(스키마)으로 알려주는 역할입니다.
+- **HTML 생성 형태:** `<body>`나 `<head>` 내부에 `<script type="application/ld+json">` 형태로 들어갑니다.
+- **효과:** 구글 검색 결과에 상품의 **가격, 재고 상태, 평점** 등이 눈에 띄는 리치 스니펫(Rich Snippets)으로 노출되도록 도와줍니다.
+
+#### 2-1. 두 기능은 대체재가 아니라 **상호보완적**인 관계
+
+- **`generateMetadata`**: "이 페이지의 **제목과 링크 미리보기 화면**은 이거야!"라고 브라우저와 SNS에 알려주는 용도 (`<head>`의 `<meta>` 태그). 일반 메타데이터(`<title>`, `<meta name="description">` 등) 역시 구글 봇이 당연히 크롤링하며 SEO에 **절대적인 영향**
+- **`JSON-LD`**: "이 페이지 안에는 이러저러한 속성을 가진 상품(가격, 재고 등)이 들어있어"라고 검색엔진 AI에게 데이터 구조를 통째로 설명해 주는 용도 (`<script>` 태그)
+
+- **일반 메타데이터 (`generateMetadata`):** 페이지의 기본 제목, 요약 설명, 소셜 미디어 미리보기(Open Graph) 등을 담당합니다. 검색엔진이 "이 페이지의 주제가 무엇인지" 파악하고, 검색 결과 목록에 일반적인 제목과 텍스트로 띄워주는 **가장 필수적인 뼈대**입니다.
+- **JSON-LD (구조화된 데이터):** 텍스트를 넘어 제품의 가격, 재고, 평점, 이벤트 날짜 같은 세부 속성을 기계가 명확히 이해할 수 있는 형식으로 전달합니다. 이를 통해 검색 결과에 리치 스니펫(가격이나 별점이 시각적으로 강조된 형태)이 노출되도록 돕는 **확장 기능**입니다.
+
+- 따라서 검색엔진 최적화를 제대로 하려면 웹페이지의 기본 정체성을 알려주는 **일반 메타데이터**를 충실히 작성하고, 쇼핑몰 상품이나 레시피처럼 상세 속성이 중요한 페이지에는 **JSON-LD**를 함께 얹어주는 것이 가장 이상적입니다.
+
+#### 2.2 일반 메타데이터에 가격, 재고, 평점, 이벤트 등 세부 속셩을 넣으면 안되나?
+
+- 일반 메타데이터(예: `<meta name="description" content="...">`나 Open Graph 태그인 `og:description`, `og:price:amount` 등)에 가격이나 평점을 넣는 것과 JSON-LD를 사용하는 것은 검색엔진이 정보를 받아들이는 방식과 노출 형태에서 결정적인 차이가 있습니다.
+
+- **검색엔진의 명확한 이해 (구조화 vs 비정상적 파싱):** 일반 메타태그(특히 `description` 같은 곳)에 "가격: 50,000원, 평점: 4.5점"이라고 텍스트로 적어두면, 검색엔진은 이를 그냥 하나의 긴 문장이나 설명글로 읽어들입니다. 반면 JSON-LD는 `price`, `ratingValue` 같은 표준화된 규격(Schema.org)을 따르기 때문에 검색엔진이 "이것은 확실히 상품 가격이고 저것은 평점이구나"라고 데이터베이스 필드처럼 정확하게 분류하여 이해할 수 있습니다.
+- **오픈그래프(Open Graph)의 한계:** 페이스북이나 카카오톡 같은 SNS 공유 미리보기용인 `og:price:amount` 같은 태그는 존재하지만, 이는 주로 SNS 공유용이며 구글 같은 검색엔진의 검색 결과 페이지(SERP)에서 리치 스니펫(별점, 가격 등 시각적 요소)을 띄워주는 용도로는 구글이 JSON-LD 방식을 공식 권장합니다.
+- **검색 결과 리치 스니펫 반영 확률:** 구글 등 주요 검색엔진은 웹페이지가 표준화된 구조화된 데이터(JSON-LD)를 제공할 때 검색 결과에 가격이나 재고, 평점을 반영해 줄 확률이 압도적으로 높습니다. 일반 텍스트나 메타 태그는 검색엔진이 파싱(추출)해 내기 번거롭기 때문에 무시되는 경우가 많습니다.
+
+- 결과적으로 일반 메타데이터에 텍스트로 적어두는 것은 사람이나 대략적인 크롤러가 읽기엔 비슷해 보일 수 있지만, 검색엔진이 상품 정보를 정확히 인지하고 검색 결과 화면에 예쁜 UI(별점, 가격 등)로 띄워주게 하려면 JSON-LD 같은 구조화된 데이터 형식을 지키는 것이 훨씬 확실하고 표준화된 방법입니다.
+
+# 메타데이터 및 SEO 실무 팁 요약
+
+- **메타데이터 템플릿 설정** (`layout.tsx`)
+- `title.template`을 활용하여 브랜드명을 매번 수동으로 입력할 필요 없이 일괄 적용 ($`\text{페이지 제목} \mid \text{브랜드명}`$)
+
+- **오픈 그래프(OG) 이미지 절대 경로 필수**
+- SNS 크롤러가 인식할 수 있도록 도메인 주소가 포함된 전체 URL(`https://...`) 형태의 이미지 경로 지정 (`process.env.NEXT_PUBLIC_SITE_URL` 활용)
+
+- **JSON-LD(구조화된 데이터) 적용**
+- Schema.org 표준 규격을 사용하여 검색엔진이 상품명, 가격, 재고 등을 정확하게 인식하도록 하여 검색 결과 리치 스니펫 노출 유도
+
+- **동적 OG 이미지 생성** (`next/og`)
+- 수많은 상품 페이지별 맞춤형 공유 이미지를 서버에서 실시간으로 합성하여 클릭률(CTR) 극대화
+
+- **검색엔진 지침 파일 구축** (`robots.txt`, `sitemap.xml`)
+- 크롤러가 사이트 구조를 원활하게 파악하고 색인할 수 있도록 자동 생성 설정 적용
