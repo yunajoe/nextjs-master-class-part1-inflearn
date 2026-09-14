@@ -1,36 +1,12 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Server Component Fetching (async/await 한 줄로 끝내는 데이터 로딩의 혁명)
 
-## Getting Started
+## Next.js 서버 컴포넌트 데이터 페칭
 
-First, run the development server:
+- **패러다임의 전환 (Client vs Server)**: 기존 SPA 방식은 브라우저가 텅 빈 HTML을 받고 `useEffect`로 직접 API를 호출해 '로딩 폭포'가 발생했으나, Next.js 서버 컴포넌트는 서버에서 데이터를 미리 채워 완성된 HTML을 전달하므로 초기 로딩 속도(FCP)와 SEO 성능이 극대화됩니다.
+- **직관적인 비동기 문법**: `async/await`를 컴포넌트 함수 자체에 바로 사용하여 `useEffect`나 `useState` 없이 직관적으로 데이터를 가져올 수 있습니다.
+- **에러 샌드위치 방어선 연동**: `!res.ok` 조건에서 에러를 던지면(`throw new Error`), 라우팅 안전장치인 `error.tsx`가 이를 낚아채 우아한 에러 UI로 전환합니다.
+- **압도적인 장점 2가지**:
+- **Zero Bundle Size**: 데이터 가공에 쓰이는 무거운 라이브러리 코드가 브라우저로 전송되지 않아 클라이언트 번들 사이즈가 0바이트로 유지됩니다.
+- **보안성(Secret Protection)**: 비밀키나 API 주소가 서버 환경에서만 실행되므로 브라우저 네트워크 탭이나 개발자 도구에 절대 노출되지 않습니다.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Next.js 15+ 핵심 변화**: `fetch` 결과가 기본적으로 캐싱되지 않고 항상 최신 데이터를 보장하도록 철학이 변경되었습니다.
